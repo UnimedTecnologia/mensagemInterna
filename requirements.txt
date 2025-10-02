@@ -1,0 +1,5 @@
+aiohttp==3.12.15
+websockets==15.0.1
+win10toast==0.9
+win10toast-click==0.1.2
+plyer==2.1.0
