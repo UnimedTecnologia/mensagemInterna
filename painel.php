@@ -10,7 +10,7 @@
     </style>
 </head>
 <body>
-    <h2>Painel de Mensagens</h2>
+    <h2>Painel de Mensagens Interna</h2>
 
     <form id="formMensagem">
         <label for="mensagem">Mensagem:</label><br>
