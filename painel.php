@@ -2,6 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
+    <link rel="icon" href="icon.png" type="image/png">
     <title>Painel de Mensagens - Unimed</title>
     <style>
         body { 
