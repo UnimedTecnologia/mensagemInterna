@@ -2,7 +2,7 @@ import asyncio
 import websockets
 import getpass
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import ttk, messagebox  
 from threading import Thread
 import json
 import base64
@@ -11,6 +11,8 @@ import io
 import os
 import socket
 import platform
+import requests
+import uuid
 try:
     from win10toast import ToastNotifier
     toaster = ToastNotifier()
@@ -21,26 +23,253 @@ except:
 usuario = getpass.getuser()  # Nome do usuário do Windows
 IP_SERVIDOR = "10.11.0.144"
 PORTA = 8765
+HTTP_SERVIDOR = f"http://{IP_SERVIDOR}:8081"
 
 # Caminho para o logo da Unimed (ajuste conforme necessário)
 LOGO_PATH = "logo_unimed.png"  # Coloque o logo na mesma pasta do client.py
 
-def get_system_info():
-    """Coleta informações da máquina para identificação"""
+# =============================================
+# SISTEMA DE IDENTIFICAÇÃO ÚNICA (NOVO)
+# =============================================
+
+def get_system_unique_id():
+    """Gera um ID único baseado nas informações da máquina"""
     try:
         hostname = socket.gethostname()
+        username = getpass.getuser()
+        
+        # Tenta obter o endereço MAC para mais unicidade
+        mac = ':'.join(['{:02x}'.format((uuid.getnode() >> elements) & 0xff) 
+                       for elements in range(0, 2*6, 2)][::-1])
+        
+        # Combina as informações para criar um ID único
+        unique_id = f"{hostname}_{username}_{mac}"
+        return unique_id
+    except Exception as e:
+        print(f"⚠️ Erro ao gerar ID único: {e}")
+        # Fallback: usa apenas username + hostname
+        return f"{getpass.getuser()}_{socket.gethostname()}"
+
+# =============================================
+# FORMULÁRIO DE CADASTRO AUTOMÁTICO (NOVO)
+# =============================================
+
+def show_registration_form(system_info):
+    """Mostra formulário de cadastro para novos usuários"""
+    def _form():
+        root = tk.Tk()
+        root.title("Cadastro - Unimed")
+        root.geometry("500x650+100+40")
+        root.configure(bg='#008E55')
+        root.resizable(False, False)
+        root.attributes("-topmost", True)
+        
+        
+        # Centralizar na tela
+        # root.eval('tk::PlaceWindow . center')
+
+        # Header
+        header = tk.Frame(root, bg='#008E55', height=80)
+        header.pack(fill=tk.X, padx=0, pady=0)
+        
+        title = tk.Label(header, text="📝 Cadastro de Colaborador", 
+                        font=('Arial', 16, 'bold'), fg='white', bg='#008E55')
+        title.pack(pady=20)
+
+        # Container principal
+        container = tk.Frame(root, bg='white')
+        container.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
+
+        # Informações da máquina
+        info_frame = tk.Frame(container, bg='#f8f9fa', relief=tk.SUNKEN, bd=1)
+        info_frame.pack(fill=tk.X, pady=(0, 15))
+        
+        tk.Label(info_frame, text="💻 Informações da Máquina:", 
+                font=('Arial', 10, 'bold'), bg='#f8f9fa').pack(anchor='w', pady=(10,5), padx=10)
+        tk.Label(info_frame, text=f"Computador: {system_info['hostname']}", 
+                font=('Arial', 9), bg='#f8f9fa').pack(anchor='w', padx=10)
+        tk.Label(info_frame, text=f"Usuário Windows: {system_info['username']}", 
+                font=('Arial', 9), bg='#f8f9fa').pack(anchor='w', padx=10, pady=(0,10))
+
+        # Formulário
+        form_frame = tk.Frame(container, bg='white')
+        form_frame.pack(fill=tk.BOTH, expand=True)
+
+        # Nome Completo
+        tk.Label(form_frame, text="Nome Completo:*", 
+                font=('Arial', 10, 'bold'), bg='white').pack(anchor='w', pady=(5,2))
+        nome_entry = tk.Entry(form_frame, font=('Arial', 11), width=40)
+        nome_entry.pack(fill=tk.X, pady=(0,10))
+        nome_entry.focus() # //* Foca no campo nome inicialmente
+
+        # Setor
+        tk.Label(form_frame, text="Setor:*", 
+                font=('Arial', 10, 'bold'), bg='white').pack(anchor='w', pady=(5,2))
+        setor_var = tk.StringVar(root)
+        setor_combo = ttk.Combobox(form_frame, textvariable=setor_var, 
+                                font=('Arial', 11), width=38, state="normal")  # ← AGORA EDITÁVEL
+        setor_combo['values'] = ['Carregando setores...']
+        setor_combo.pack(fill=tk.X, pady=(0,10))
+
+        # Matrícula (opcional)
+        tk.Label(form_frame, text="Matrícula (opcional):", 
+                font=('Arial', 10, 'bold'), bg='white').pack(anchor='w', pady=(5,2))
+        matricula_entry = tk.Entry(form_frame, font=('Arial', 11), width=40)
+        matricula_entry.pack(fill=tk.X, pady=(0,20))
+
+        # Status
+        status_label = tk.Label(form_frame, text="", font=('Arial', 9), bg='white')
+        status_label.pack(pady=5)
+
+        # Variável para controle
+        cadastro_realizado = False
+
+                # Carregar setores do servidor
+        def carregar_setores():
+            try:
+                response = requests.get(f'{HTTP_SERVIDOR}/setores', timeout=5)
+                if response.status_code == 200:
+                    setores = response.json()
+                    if setores:
+                        setor_combo['values'] = setores
+                        setor_combo.set(setores[0])  # Seleciona o primeiro por padrão
+                        status_label.config(text="✅ Setores carregados - Selecione ou digite um novo", fg="green")
+                        
+                        # REMOVA ou COMENTE esta linha que focava no setor:
+                        # root.after(300, lambda: setor_combo.focus())  # ← REMOVA ESTA LINHA
+                        
+                    else:
+                        status_label.config(text="⚠️ Nenhum setor cadastrado - Digite o nome do setor", fg="orange")
+                else:
+                    status_label.config(text="❌ Erro ao carregar setores - Digite manualmente", fg="red")
+            except Exception as e:
+                status_label.config(text="❌ Servidor indisponível - Digite manualmente", fg="red")
+                print(f"Erro ao carregar setores: {e}")
+
+        # Botão de cadastro
+        def cadastrar():
+            nonlocal cadastro_realizado
+            nome = nome_entry.get().strip()
+            setor = setor_var.get().strip()
+            matricula = matricula_entry.get().strip()
+
+            if not nome:
+                status_label.config(text="❌ Preencha o nome completo!", fg="red")
+                nome_entry.focus()
+                return
+
+            if not setor or setor == 'Carregando setores...':
+                status_label.config(text="❌ Selecione um setor!", fg="red")
+                setor_combo.focus()
+                return
+
+            try:
+                dados = {
+                    'username': system_info['unique_id'],
+                    'nome_completo': nome,
+                    'setor': setor,
+                    'matricula': matricula,
+                    'hostname': system_info['hostname']
+                }
+                
+                status_label.config(text="⏳ Realizando cadastro...", fg="blue")
+                
+                response = requests.post(
+                    f'{HTTP_SERVIDOR}/admin/cadastro_usuario', 
+                    json=dados, 
+                    timeout=10
+                )
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    if result['status'] == 'ok':
+                        status_label.config(text="✅ Cadastro realizado com sucesso!", fg="green")
+                        cadastro_realizado = True
+                        # Fecha após 2 segundos
+                        root.after(2000, root.destroy)
+                    else:
+                        status_label.config(text=f"❌ Erro: {result.get('detalhes', 'Erro desconhecido')}", fg="red")
+                else:
+                    status_label.config(text="❌ Erro no servidor", fg="red")
+                    
+            except requests.exceptions.Timeout:
+                status_label.config(text="❌ Tempo esgotado - tente novamente", fg="red")
+            except requests.exceptions.ConnectionError:
+                status_label.config(text="❌ Erro de conexão - verifique o servidor", fg="red")
+            except Exception as e:
+                status_label.config(text="❌ Erro inesperado", fg="red")
+                print(f"Erro no cadastro: {e}")
+
+        # Botão cadastrar
+        btn_cadastrar = tk.Button(form_frame, text="📋 Realizar Cadastro", 
+                                command=cadastrar, font=('Arial', 12, 'bold'),
+                                bg='#008E55', fg='white', padx=20, pady=8)
+        btn_cadastrar.pack(pady=5)
+
+        # Botão cancelar (opcional)
+        btn_cancelar = tk.Button(form_frame, text="⏩ Pular Cadastro", 
+                                command=root.destroy, font=('Arial', 10),
+                                bg='#6c757d', fg='white', padx=15, pady=5)
+        btn_cancelar.pack(pady=5)
+
+        # Enter no formulário executa cadastro
+        def on_enter(event):
+            cadastrar()
+        
+        nome_entry.bind('<Return>', on_enter)
+        setor_combo.bind('<Return>', on_enter)
+        matricula_entry.bind('<Return>', on_enter)
+
+        # Carregar setores após a interface estar pronta
+        root.after(100, carregar_setores)
+        
+        # Focar no campo nome
+        root.after(200, lambda: nome_entry.focus())
+        
+        root.mainloop()
+        return cadastro_realizado
+
+    return _form()
+
+def get_system_info():
+    """Coleta informações completas da máquina"""
+    try:
+        hostname = socket.gethostname()
+        username = getpass.getuser()
         sistema_operacional = platform.system()
+        unique_id = get_system_unique_id()
         
         system_info = {
             'hostname': hostname,
-            'username': usuario,
+            'username': username,
             'os': sistema_operacional,
-            'platform': platform.platform()
+            'platform': platform.platform(),
+            'unique_id': unique_id  # ← ID único para cadastro
         }
         return system_info
     except Exception as e:
         print(f"⚠️ Erro ao coletar informações do sistema: {e}")
-        return {'username': usuario}
+        return {'username': getpass.getuser(), 'unique_id': getpass.getuser()}
+
+def verificar_usuario_cadastrado(unique_id):
+    """Verifica se o usuário já está cadastrado no servidor"""
+    try:
+        response = requests.get(
+            f'{HTTP_SERVIDOR}/admin/verificar_usuario/{unique_id}', 
+            timeout=5
+        )
+        if response.status_code == 200:
+            data = response.json()
+            return data.get('cadastrado', False)
+        else:
+            print(f"❌ Erro na verificação: {response.status_code}")
+            return False
+    except requests.exceptions.RequestException as e:
+        print(f"❌ Erro de conexão na verificação: {e}")
+        return False
+    except Exception as e:
+        print(f"❌ Erro inesperado na verificação: {e}")
+        return False
 
 def show_popup(titulo, mensagem, icon_path=None, message_data=None):
     """Popup Tkinter personalizado com logo da Unimed e scroll"""
@@ -272,30 +501,57 @@ def show_connection_status(connected):
         )).start()
 
 async def listen():
+    # Coletar informações únicas do sistema
     system_info = get_system_info()
+    unique_id = system_info['unique_id']
     hostname = system_info.get('hostname', 'N/A')
     
     print("=" * 50)
     print("🚀 CLIENTE DE MENSAGENS - UNIMED")
     print("=" * 50)
-    print(f"👤 Usuário: {usuario}")
-    print(f"💻 Máquina: {hostname}")
-    print(f"🔗 Conectando em: {IP_SERVIDOR}:{PORTA}")
+    print(f"👤 Usuário Windows: {system_info['username']}")
+    print(f"💻 Computador: {hostname}")
+    print(f"🔑 ID Único: {unique_id}")
     print("=" * 50)
+    
+    # Verificar se usuário já está cadastrado
+    print("🔍 Verificando cadastro no servidor...")
+    usuario_cadastrado = verificar_usuario_cadastrado(unique_id)
+    
+    if not usuario_cadastrado:
+        print("📝 Usuário não cadastrado. Iniciando processo de cadastro...")
+        
+        # Mostrar formulário de cadastro
+        cadastro_sucesso = show_registration_form(system_info)
+        
+        if cadastro_sucesso:
+            print("✅ Cadastro realizado com sucesso! Conectando ao servidor...")
+            # Pequena pausa para processar o cadastro
+            await asyncio.sleep(2)
+        else:
+            print("❌ Cadastro não realizado. Tentando conectar como usuário não cadastrado...")
+            # Continua mesmo sem cadastro, mas como "NÃO CADASTRADO"
+    else:
+        print("✅ Usuário já cadastrado. Conectando ao servidor...")
+    
+    # Conexão normal com o servidor WebSocket
+    # Usa o unique_id como username para o servidor
+    username_para_conexao = unique_id
     
     uri = f"ws://{IP_SERVIDOR}:{PORTA}"
     reconnect_count = 0
-    max_reconnect_delay = 30  # Máximo de 30 segundos entre tentativas
+    max_reconnect_delay = 30
     
     while True:
         try:
             async with websockets.connect(uri) as websocket:
-                # Envia username para o servidor
-                await websocket.send(usuario)
+                # Envia o unique_id como username para o servidor
+                await websocket.send(username_para_conexao)
                 
                 print(f"✅ Conectado ao servidor com sucesso!")
+                print(f"📡 Enviando como: {username_para_conexao}")
                 show_connection_status(True)
-                reconnect_count = 0  # Reset do contador de reconexões
+                reconnect_count = 0
                 
                 while True:
                     msg = await websocket.recv()
@@ -356,7 +612,7 @@ async def listen():
 
         # Reconexão com backoff exponencial
         reconnect_count += 1
-        delay = min(3 * reconnect_count, max_reconnect_delay)  # Backoff exponencial até 30s
+        delay = min(3 * reconnect_count, max_reconnect_delay)
         
         print(f"🔄 Tentando reconectar em {delay} segundos... (Tentativa {reconnect_count})")
         await asyncio.sleep(delay)

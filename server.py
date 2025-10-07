@@ -111,12 +111,16 @@ def get_user_info(username):
     conn.close()
     
     if result:
-        return {
+        user_info = {
             'username': result[0],
             'setor': result[1],
             'nome_completo': result[2],
             'matricula': result[3]
         }
+        print(f"🔍 Usuário encontrado: {user_info['nome_completo']} ({user_info['setor']})")
+        return user_info
+    
+    print(f"🔍 Usuário NÃO cadastrado: {username}")
     return None
 
 def get_setores():
@@ -697,6 +701,128 @@ async def enviar_mensagem_terminal():
         except Exception as e:
             print(f"❌ Erro no terminal: {e}")
 
+
+async def admin_verificar_usuario(request):
+    """Rota para verificar se um usuário já está cadastrado"""
+    headers = {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type"
+    }
+    
+    if request.method == 'OPTIONS':
+        return web.Response(status=200, headers=headers)
+    
+    try:
+        username = request.match_info['username']
+        
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT id, username, setor, nome_completo 
+            FROM usuarios 
+            WHERE username = ? AND ativo = 1
+        ''', (username,))
+        
+        usuario = cursor.fetchone()
+        conn.close()
+        
+        if usuario:
+            return web.json_response({
+                'cadastrado': True,
+                'usuario': {
+                    'id': usuario[0],
+                    'username': usuario[1],
+                    'setor': usuario[2],
+                    'nome_completo': usuario[3]
+                }
+            }, headers=headers)
+        else:
+            return web.json_response({
+                'cadastrado': False
+            }, headers=headers)
+            
+    except Exception as e:
+        return web.json_response({
+            'cadastrado': False,
+            'erro': str(e)
+        }, headers=headers)
+
+async def admin_cadastro_usuario(request):
+    """Rota para cadastro de novos usuários pelo client.py"""
+    headers = {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type"
+    }
+    
+    if request.method == 'OPTIONS':
+        return web.Response(status=200, headers=headers)
+    
+    try:
+        data = await request.json()
+        
+        # Validar dados obrigatórios
+        if not all(k in data for k in ['username', 'nome_completo', 'setor']):
+            return web.json_response({
+                "status": "erro", 
+                "detalhes": "Dados incompletos. Nome e setor são obrigatórios."
+            }, headers=headers)
+        
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        # Verificar se setor existe
+        cursor.execute('SELECT nome FROM setores WHERE nome = ? AND ativo = 1', (data['setor'],))
+        if not cursor.fetchone():
+            conn.close()
+            return web.json_response({
+                "status": "erro", 
+                "detalhes": f"Setor '{data['setor']}' não encontrado."
+            }, headers=headers)
+        
+        # Verificar se usuário já existe
+        cursor.execute('SELECT id FROM usuarios WHERE username = ?', (data['username'],))
+        if cursor.fetchone():
+            conn.close()
+            return web.json_response({
+                "status": "erro", 
+                "detalhes": "Usuário já cadastrado."
+            }, headers=headers)
+        
+        # Inserir usuário
+        cursor.execute('''
+            INSERT INTO usuarios (username, setor, nome_completo, matricula, ativo)
+            VALUES (?, ?, ?, ?, 1)
+        ''', (
+            data['username'],
+            data['setor'],
+            data['nome_completo'],
+            data.get('matricula', '')
+        ))
+        
+        conn.commit()
+        conn.close()
+        
+        print(f"✅ NOVO USUÁRIO CADASTRADO: {data['nome_completo']} ({data['setor']}) - ID: {data['username']}")
+        
+        return web.json_response({
+            "status": "ok",
+            "mensagem": "Usuário cadastrado com sucesso!"
+        }, headers=headers)
+        
+    except sqlite3.IntegrityError as e:
+        return web.json_response({
+            "status": "erro", 
+            "detalhes": "Erro de integridade: usuário já existe ou setor inválido."
+        }, headers=headers)
+    except Exception as e:
+        print(f"❌ Erro no cadastro de usuário: {e}")
+        return web.json_response({
+            "status": "erro", 
+            "detalhes": f"Erro interno: {str(e)}"
+        }, headers=headers)
 # =============================================
 # MAIN (EXISTENTE COM ADIÇÕES)
 # =============================================
@@ -726,7 +852,9 @@ async def main():
         web.route("*", "/admin/setores", admin_setores),
         web.route("*", "/admin/setores/{nome}", admin_setor_detail),
         web.route("*", "/admin/mensagens", admin_mensagens),
-        web.route("*", "/admin/estatisticas", admin_estatisticas)
+        web.route("*", "/admin/estatisticas", admin_estatisticas),
+        web.route("*", "/admin/verificar_usuario/{username}", admin_verificar_usuario),
+        web.route("*", "/admin/cadastro_usuario", admin_cadastro_usuario)  
     ])
     
     runner = web.AppRunner(app)
