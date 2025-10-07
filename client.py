@@ -2,25 +2,45 @@ import asyncio
 import websockets
 import getpass
 import tkinter as tk
+from tkinter import messagebox
 from threading import Thread
 import json
 import base64
 from PIL import Image, ImageTk
 import io
 import os
+import socket
+import platform
 try:
     from win10toast import ToastNotifier
     toaster = ToastNotifier()
 except:
     toaster = None
 
-# usuario = "user1"  # ou getpass.getuser()
-usuario = getpass.getuser()
+# Configurações
+usuario = getpass.getuser()  # Nome do usuário do Windows
 IP_SERVIDOR = "10.11.0.144"
 PORTA = 8765
 
 # Caminho para o logo da Unimed (ajuste conforme necessário)
 LOGO_PATH = "logo_unimed.png"  # Coloque o logo na mesma pasta do client.py
+
+def get_system_info():
+    """Coleta informações da máquina para identificação"""
+    try:
+        hostname = socket.gethostname()
+        sistema_operacional = platform.system()
+        
+        system_info = {
+            'hostname': hostname,
+            'username': usuario,
+            'os': sistema_operacional,
+            'platform': platform.platform()
+        }
+        return system_info
+    except Exception as e:
+        print(f"⚠️ Erro ao coletar informações do sistema: {e}")
+        return {'username': usuario}
 
 def show_popup(titulo, mensagem, icon_path=None, message_data=None):
     """Popup Tkinter personalizado com logo da Unimed e scroll"""
@@ -40,7 +60,7 @@ def show_popup(titulo, mensagem, icon_path=None, message_data=None):
                 logo_img = logo_img.resize((100, 40), Image.Resampling.LANCZOS)
                 logo_image = ImageTk.PhotoImage(logo_img)
         except Exception as e:
-            print(f"Erro ao carregar logo: {e}")
+            print(f"⚠️ Erro ao carregar logo: {e}")
 
         # Header com logo (fixo - sem scroll)
         header_frame = tk.Frame(root, bg='#008E55', height=60)
@@ -232,36 +252,72 @@ def show_popup(titulo, mensagem, icon_path=None, message_data=None):
         canvas.update_idletasks()
         canvas.yview_moveto(0.0)
 
+        # Focar na janela
+        root.focus_force()
+        root.lift()
+
         root.mainloop()
 
-    Thread(target=_popup).start()
+    Thread(target=_popup, daemon=True).start()
+
+def show_connection_status(connected):
+    """Mostra status da conexão na bandeja do sistema (para versão futura)"""
+    if toaster:
+        status = "conectado" if connected else "desconectado"
+        Thread(target=lambda: toaster.show_toast(
+            "Sistema de Mensagens - Unimed",
+            f"Status: {status}",
+            duration=3,
+            threaded=True
+        )).start()
 
 async def listen():
+    system_info = get_system_info()
+    hostname = system_info.get('hostname', 'N/A')
+    
+    print("=" * 50)
+    print("🚀 CLIENTE DE MENSAGENS - UNIMED")
+    print("=" * 50)
+    print(f"👤 Usuário: {usuario}")
+    print(f"💻 Máquina: {hostname}")
+    print(f"🔗 Conectando em: {IP_SERVIDOR}:{PORTA}")
+    print("=" * 50)
+    
     uri = f"ws://{IP_SERVIDOR}:{PORTA}"
+    reconnect_count = 0
+    max_reconnect_delay = 30  # Máximo de 30 segundos entre tentativas
+    
     while True:
         try:
             async with websockets.connect(uri) as websocket:
+                # Envia username para o servidor
                 await websocket.send(usuario)
-                print(f"{usuario} conectado ao servidor.")
+                
+                print(f"✅ Conectado ao servidor com sucesso!")
+                show_connection_status(True)
+                reconnect_count = 0  # Reset do contador de reconexões
                 
                 while True:
                     msg = await websocket.recv()
                     try:
                         data = json.loads(msg)
-                        print(f"Mensagem recebida de {data.get('sender')}: {data['type']}")
+                        sender = data.get('sender', 'Unknown')
+                        msg_type = data.get('type', 'text')
+                        
+                        print(f"📨 Mensagem recebida de {sender}: {msg_type.upper()}")
 
                         # Notificação na Central de Ações (win10toast)
                         if toaster:
-                            if data['type'] == 'text':
+                            if msg_type == 'text':
                                 notification_msg = data['content']
-                                notification_title = f"Unimed - {data.get('sender', 'Unknown')}"
+                                notification_title = f"Unimed - {sender}"
                             else:
                                 texto_adicional = data.get('texto_adicional', '')
                                 if texto_adicional:
                                     notification_msg = f"📷 {texto_adicional}"
                                 else:
                                     notification_msg = "📷 Nova imagem recebida"
-                                notification_title = f"Unimed - {data.get('sender', 'Unknown')}"
+                                notification_title = f"Unimed - {sender}"
                                 
                             Thread(target=lambda: toaster.show_toast(
                                 notification_title,
@@ -271,7 +327,7 @@ async def listen():
                             )).start()
 
                         # Popup Tkinter
-                        if data['type'] == 'text':
+                        if msg_type == 'text':
                             show_popup("Mensagem - Unimed", 
                                      data['content'], 
                                      icon_path="icon.ico",
@@ -284,11 +340,61 @@ async def listen():
                                      message_data=data)
 
                     except json.JSONDecodeError:
-                        print(f"Mensagem não JSON: {msg}")
+                        print(f"❌ Mensagem não JSON recebida: {msg}")
+                    except Exception as e:
+                        print(f"❌ Erro ao processar mensagem: {e}")
 
+        except websockets.ConnectionClosed:
+            print(f"🔌 Conexão com o servidor foi fechada")
+            show_connection_status(False)
+        except ConnectionRefusedError:
+            print(f"❌ Servidor recusou a conexão. Verifique se o servidor está rodando.")
+            show_connection_status(False)
         except Exception as e:
-            print(f"Erro de conexão: {e}. Tentando reconectar em 3s...")
-            await asyncio.sleep(3)
+            print(f"❌ Erro de conexão: {e}")
+            show_connection_status(False)
+
+        # Reconexão com backoff exponencial
+        reconnect_count += 1
+        delay = min(3 * reconnect_count, max_reconnect_delay)  # Backoff exponencial até 30s
+        
+        print(f"🔄 Tentando reconectar em {delay} segundos... (Tentativa {reconnect_count})")
+        await asyncio.sleep(delay)
+
+def check_dependencies():
+    """Verifica se todas as dependências estão instaladas"""
+    missing_deps = []
+    
+    try:
+        import websockets
+    except ImportError:
+        missing_deps.append("websockets")
+    
+    try:
+        import PIL
+    except ImportError:
+        missing_deps.append("Pillow")
+    
+    if missing_deps:
+        print("❌ Dependências faltando:")
+        for dep in missing_deps:
+            print(f"   - {dep}")
+        print(f"\n💡 Instale com: pip install {' '.join(missing_deps)}")
+        return False
+    
+    return True
 
 if __name__ == "__main__":
-    asyncio.run(listen())
+    # Verificar dependências
+    if not check_dependencies():
+        input("Pressione Enter para sair...")
+        exit(1)
+    
+    try:
+        print("Iniciando cliente de mensagens...")
+        asyncio.run(listen())
+    except KeyboardInterrupt:
+        print("\n\n🔴 Cliente encerrado pelo usuário")
+    except Exception as e:
+        print(f"\n\n❌ Erro fatal: {e}")
+        input("Pressione Enter para sair...")
