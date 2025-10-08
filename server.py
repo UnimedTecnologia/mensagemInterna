@@ -12,6 +12,9 @@ from datetime import datetime
 # CONFIGURAÇÕES E VARIÁVEIS GLOBAIS
 # =============================================
 
+PORTA_WS = 8080      # WebSocket na porta 8080
+PORTA_HTTP = 8088    # HTTP na porta 8088
+
 # Dicionários de clientes conectados
 clientes = {}  # {client_id: websocket}
 clientes_info = {}  # {client_id: user_info}
@@ -833,6 +836,8 @@ async def main():
     
     # Servidor WebSocket
     ws_server = await websockets.serve(handler, "0.0.0.0", 8765)
+    # ws_server = await websockets.serve(handler, "0.0.0.0", PORTA_WS)
+    
     print("🚀 Servidor WebSocket iniciado em ws://0.0.0.0:8765")
 
     # Servidor HTTP aiohttp
@@ -854,12 +859,13 @@ async def main():
         web.route("*", "/admin/mensagens", admin_mensagens),
         web.route("*", "/admin/estatisticas", admin_estatisticas),
         web.route("*", "/admin/verificar_usuario/{username}", admin_verificar_usuario),
-        web.route("*", "/admin/cadastro_usuario", admin_cadastro_usuario)  
+        web.route("*", "/admin/cadastro_usuario", admin_cadastro_usuario)
     ])
     
     runner = web.AppRunner(app)
     await runner.setup()
     site = web.TCPSite(runner, '0.0.0.0', 8081)
+    # site = web.TCPSite(runner, '0.0.0.0', PORTA_HTTP)
     await site.start()
     print("🌐 Servidor HTTP para painel iniciado em http://0.0.0.0:8081")
     
@@ -868,8 +874,8 @@ async def main():
     print("="*50)
     print(f"📊 Clientes conectados: {len(clientes)}")
     print(f"📂 Setores cadastrados: {len(get_setores())}")
-    print("🎮 Painel Admin disponível em: http://10.11.0.144:8081/painel_admin.php")
-    print("📱 Painel Mensagens disponível em: http://10.11.0.144:8081/painel.php")
+    print("🎮 Painel Admin disponível em: http://10.10.10.51:8081/painel_admin.php")
+    print("📱 Painel Mensagens disponível em: http://10.10.10.51:8081/painel.php")
     print("="*50)
 
     # Envio de mensagens do terminal
@@ -877,7 +883,9 @@ async def main():
 
 if __name__ == "__main__":
     try:
-        asyncio.run(main())
+        # Método compatível com Python 3.6
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(main())
     except KeyboardInterrupt:
         print("\n\n🔴 Servidor encerrado pelo usuário")
     except Exception as e:

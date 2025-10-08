@@ -408,7 +408,8 @@
         }
 
         // API Base URL
-        const API_BASE = 'http://10.11.0.144:8081';
+        const API_BASE = 'http://10.11.0.144:8081'; // TESTE LOCAL
+        // const API_BASE = 'http://10.10.10.51:8081';
 
         // Carregar usuários
         async function carregarUsuarios() {

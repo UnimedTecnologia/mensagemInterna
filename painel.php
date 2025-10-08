@@ -312,7 +312,8 @@
         // Carregar setores disponíveis
         async function carregarSetores() {
             try {
-                const res = await fetch('http://10.11.0.144:8081/setores');
+                const res = await fetch('http://10.11.0.144:8081/setores'); // TESTE LOCAL
+                // const res = await fetch('http://10.10.10.51:8081/setores');
                 if (!res.ok) throw new Error('Servidor não respondeu');
                 
                 setoresDisponiveis = await res.json();
@@ -397,7 +398,8 @@
         // Função para buscar usuários online
         async function atualizarUsuarios() {
             try {
-                const res = await fetch('http://10.11.0.144:8081/usuarios');
+                const res = await fetch('http://10.11.0.144:8081/usuarios'); // TESTE LOCAL
+                // const res = await fetch('http://10.10.10.51:8081/usuarios');
                 if (!res.ok) throw new Error('Servidor não respondeu');
                 
                 usuariosOnline = await res.json();
@@ -535,7 +537,8 @@
                 submitButton.disabled = true;
 
                 // Envia via servidor Python
-                const response = await fetch('http://10.11.0.144:8081/enviar', { 
+                const response = await fetch('http://10.11.0.144:8081/enviar', {  // TESTE LOCAL
+                // const response = await fetch('http://10.10.10.51:8081/enviar', { 
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
