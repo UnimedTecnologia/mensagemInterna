@@ -303,6 +303,9 @@
         const serverStatus = document.getElementById('serverStatus');
         const serverMessage = document.getElementById('serverMessage');
         const lastUpdate = document.getElementById('lastUpdate');
+        // const IPSERVER = '10.10.8.34'; // Alterar conforme necessário
+        const IPSERVER = '127.0.0.1'; // localhost
+
 
         let setorAtual = 'todos';
         let setoresDisponiveis = [];
@@ -312,7 +315,7 @@
         // Carregar setores disponíveis
         async function carregarSetores() {
             try {
-                const res = await fetch('http://10.11.0.144:8081/setores'); // TESTE LOCAL
+                const res = await fetch(`http://${IPSERVER}:8081/setores`); // TESTE LOCAL
                 // const res = await fetch('http://10.10.10.51:8081/setores');
                 if (!res.ok) throw new Error('Servidor não respondeu');
                 
@@ -398,7 +401,7 @@
         // Função para buscar usuários online
         async function atualizarUsuarios() {
             try {
-                const res = await fetch('http://10.11.0.144:8081/usuarios'); // TESTE LOCAL
+                const res = await fetch(`http://${IPSERVER}:8081/usuarios`); // TESTE LOCAL
                 // const res = await fetch('http://10.10.10.51:8081/usuarios');
                 if (!res.ok) throw new Error('Servidor não respondeu');
                 
@@ -537,7 +540,7 @@
                 submitButton.disabled = true;
 
                 // Envia via servidor Python
-                const response = await fetch('http://10.11.0.144:8081/enviar', {  // TESTE LOCAL
+                const response = await fetch(`http://${IPSERVER}:8081/enviar`, {  // TESTE LOCAL
                 // const response = await fetch('http://10.10.10.51:8081/enviar', { 
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },

@@ -12,8 +12,11 @@ from datetime import datetime
 # CONFIGURAÇÕES E VARIÁVEIS GLOBAIS
 # =============================================
 
-PORTA_WS = 8080      # WebSocket na porta 8080
-PORTA_HTTP = 8088    # HTTP na porta 8088
+PORTA_WS = 8765      # LOCAL
+# PORTA_WS = 8080      # WebSocket na porta 8080
+
+PORTA_HTTP = 8081    # LOCAL
+# PORTA_HTTP = 8088    # HTTP na porta 8088
 
 # Dicionários de clientes conectados
 clientes = {}  # {client_id: websocket}
@@ -84,7 +87,7 @@ def init_database():
     #     ('Contas Medicas', 'Contas Médicas')
     # ''')
     
-    # Inserir alguns dados de exemplo (remova depois)
+    # Inserir alguns dados de exemplo 
     # cursor.execute('''
     #     INSERT OR IGNORE INTO usuarios (username, setor, nome_completo) VALUES 
     #     ('user', 'TI', 'Pedro Rodrigues'),
@@ -835,10 +838,9 @@ async def main():
     init_database()
     
     # Servidor WebSocket
-    ws_server = await websockets.serve(handler, "0.0.0.0", 8765)
-    # ws_server = await websockets.serve(handler, "0.0.0.0", PORTA_WS)
+    ws_server = await websockets.serve(handler, "0.0.0.0", PORTA_WS)
     
-    print("🚀 Servidor WebSocket iniciado em ws://0.0.0.0:8765")
+    print("🚀 Servidor WebSocket iniciado em ws://0.0.0.0:",PORTA_WS)
 
     # Servidor HTTP aiohttp
     app = web.Application()
@@ -864,18 +866,17 @@ async def main():
     
     runner = web.AppRunner(app)
     await runner.setup()
-    site = web.TCPSite(runner, '0.0.0.0', 8081)
-    # site = web.TCPSite(runner, '0.0.0.0', PORTA_HTTP)
+    site = web.TCPSite(runner, '0.0.0.0', PORTA_HTTP)
     await site.start()
-    print("🌐 Servidor HTTP para painel iniciado em http://0.0.0.0:8081")
+    print("🌐 Servidor HTTP para painel iniciado em http://0.0.0.0:",PORTA_HTTP)
     
     print("\n" + "="*50)
     print("✅ SISTEMA INICIADO COM SUCESSO!")
     print("="*50)
     print(f"📊 Clientes conectados: {len(clientes)}")
     print(f"📂 Setores cadastrados: {len(get_setores())}")
-    print("🎮 Painel Admin disponível em: http://10.10.10.51:8081/painel_admin.php")
-    print("📱 Painel Mensagens disponível em: http://10.10.10.51:8081/painel.php")
+    # print("🎮 Painel Admin disponível em: http://10.10.10.51:8081/painel_admin.php")
+    # print("📱 Painel Mensagens disponível em: http://10.10.10.51:8081/painel.php")
     print("="*50)
 
     # Envio de mensagens do terminal

@@ -21,14 +21,17 @@ except:
 
 # Configurações
 usuario = getpass.getuser()  # Nome do usuário do Windows
-IP_SERVIDOR = "10.11.0.144" # TESTE LOCAL
-# IP_SERVIDOR = "10.10.10.51" 
-PORTA = 8765
-HTTP_SERVIDOR = f"http://{IP_SERVIDOR}:8081"
 
-# IP_SERVIDOR = "10.10.10.51"
-# PORTA = 8080        # ← WebSocket (DEVE SER 8080)
-# HTTP_SERVIDOR = f"http://{IP_SERVIDOR}:8088"  # ← HTTP (DEVE SER 8088)
+# Configurações para LOCAL
+### IP_SERVIDOR = "10.11.0.144" # LOCAL old ip
+IP_SERVIDOR = "10.10.8.34" # LOCAL
+PORTA = 8765 #LOCAL
+HTTP_SERVIDOR = f"http://{IP_SERVIDOR}:8081" # LOCAL
+
+# //! Configurações para SERVIDOR 
+# IP_SERVIDOR = "10.10.10.51" 
+# PORTA = 8080
+# HTTP_SERVIDOR = f"http://{IP_SERVIDOR}:8088"
 
 # Caminho para o logo da Unimed (ajuste conforme necessário)
 LOGO_PATH = "logo_unimed.png"  # Coloque o logo na mesma pasta do client.py
