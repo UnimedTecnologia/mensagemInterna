@@ -1,0 +1,102 @@
+2025-10-16 15:14:12,079 - DEBUG - Using proactor: IocpProactor
+2025-10-16 15:14:12,086 - INFO - ✅ Banco de dados inicializado!
+2025-10-16 15:14:12,098 - INFO - server listening on 0.0.0.0:8765
+2025-10-16 15:14:12,098 - INFO - 🚀 Servidor WebSocket DEBUG iniciado em ws://0.0.0.0:8765
+2025-10-16 15:14:12,099 - INFO - 🌐 Servidor HTTP iniciado em http://0.0.0.0:8081
+2025-10-16 15:14:15,702 - DEBUG - = connection is CONNECTING
+2025-10-16 15:14:15,717 - DEBUG - < GET / HTTP/1.1
+2025-10-16 15:14:15,718 - DEBUG - < Host: 192.168.16.166:8765
+2025-10-16 15:14:15,718 - DEBUG - < Upgrade: websocket
+2025-10-16 15:14:15,722 - DEBUG - < Connection: Upgrade
+2025-10-16 15:14:15,723 - DEBUG - < Sec-WebSocket-Key: AN8EWgAu4tXxYlR2KBWp/A==
+2025-10-16 15:14:15,723 - DEBUG - < Sec-WebSocket-Version: 13
+2025-10-16 15:14:15,724 - DEBUG - < Sec-WebSocket-Extensions: permessage-deflate; client_max_window_bits
+2025-10-16 15:14:15,724 - DEBUG - < User-Agent: Python/3.13 websockets/15.0.1
+2025-10-16 15:14:15,725 - DEBUG - > HTTP/1.1 101 Switching Protocols
+2025-10-16 15:14:15,725 - DEBUG - > Date: Thu, 16 Oct 2025 18:14:15 GMT
+2025-10-16 15:14:15,725 - DEBUG - > Upgrade: websocket
+2025-10-16 15:14:15,725 - DEBUG - > Connection: Upgrade
+2025-10-16 15:14:15,726 - DEBUG - > Sec-WebSocket-Accept: u/fD6Mqd4iD7NHgrrG6ML/DhYoA=
+2025-10-16 15:14:15,726 - DEBUG - > Sec-WebSocket-Extensions: permessage-deflate; server_max_window_bits=12; client_max_window_bits=12
+2025-10-16 15:14:15,726 - DEBUG - > Server: Python/3.13 websockets/15.0.1
+2025-10-16 15:14:15,726 - DEBUG - = connection is OPEN
+2025-10-16 15:14:15,727 - INFO - connection open
+2025-10-16 15:14:15,727 - ERROR - connection handler failed
+Traceback (most recent call last):
+  File "C:\Users\user\AppData\Local\Programs\Python\Python313\Lib\site-packages\websockets\asyncio\server.py", line 376, in conn_handler
+    await self.handler(connection)
+          ~~~~~~~~~~~~^^^^^^^^^^^^
+TypeError: handler() missing 1 required positional argument: 'path'
+2025-10-16 15:14:15,728 - DEBUG - > CLOSE 1011 (internal error) [2 bytes]
+2025-10-16 15:14:15,728 - DEBUG - = connection is CLOSING
+2025-10-16 15:14:21,817 - INFO - 192.168.16.166 [16/Oct/2025:15:14:21 -0300] "GET /usuarios HTTP/1.1" 200 287 "http://10.10.10.51/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36"
+2025-10-16 15:14:24,526 - DEBUG - < CLOSE 1011 (internal error) [2 bytes]
+2025-10-16 15:14:24,527 - DEBUG - > EOF
+2025-10-16 15:14:24,528 - DEBUG - x half-closing TCP connection
+2025-10-16 15:14:24,538 - DEBUG - < EOF
+2025-10-16 15:14:24,539 - DEBUG - = connection is CLOSED
+2025-10-16 15:14:42,118 - INFO - 📊 Health Check: 0 conexões ativas
+2025-10-16 15:14:44,655 - DEBUG - = connection is CONNECTING
+2025-10-16 15:14:44,667 - DEBUG - < GET / HTTP/1.1
+2025-10-16 15:14:44,667 - DEBUG - < Host: 192.168.16.166:8765
+2025-10-16 15:14:44,668 - DEBUG - < Upgrade: websocket
+2025-10-16 15:14:44,668 - DEBUG - < Connection: Upgrade
+2025-10-16 15:14:44,669 - DEBUG - < Sec-WebSocket-Key: UGsXidYjnUP1OkhdHhFmQw==
+2025-10-16 15:14:44,670 - DEBUG - < Sec-WebSocket-Version: 13
+2025-10-16 15:14:44,670 - DEBUG - < Sec-WebSocket-Extensions: permessage-deflate; client_max_window_bits
+2025-10-16 15:14:44,671 - DEBUG - < User-Agent: Python/3.13 websockets/15.0.1
+2025-10-16 15:14:44,671 - DEBUG - > HTTP/1.1 101 Switching Protocols
+2025-10-16 15:14:44,672 - DEBUG - > Date: Thu, 16 Oct 2025 18:14:44 GMT
+2025-10-16 15:14:44,672 - DEBUG - > Upgrade: websocket
+2025-10-16 15:14:44,672 - DEBUG - > Connection: Upgrade
+2025-10-16 15:14:44,672 - DEBUG - > Sec-WebSocket-Accept: qVL4FF+xYdf9SQsKad2eeB4kruw=
+2025-10-16 15:14:44,673 - DEBUG - > Sec-WebSocket-Extensions: permessage-deflate; server_max_window_bits=12; client_max_window_bits=12
+2025-10-16 15:14:44,673 - DEBUG - > Server: Python/3.13 websockets/15.0.1
+2025-10-16 15:14:44,673 - DEBUG - = connection is OPEN
+2025-10-16 15:14:44,673 - INFO - connection open
+2025-10-16 15:14:44,673 - ERROR - connection handler failed
+Traceback (most recent call last):
+  File "C:\Users\user\AppData\Local\Programs\Python\Python313\Lib\site-packages\websockets\asyncio\server.py", line 376, in conn_handler
+    await self.handler(connection)
+          ~~~~~~~~~~~~^^^^^^^^^^^^
+TypeError: handler() missing 1 required positional argument: 'path'
+2025-10-16 15:14:44,674 - DEBUG - > CLOSE 1011 (internal error) [2 bytes]
+2025-10-16 15:14:44,675 - DEBUG - = connection is CLOSING
+2025-10-16 15:14:54,531 - DEBUG - < CLOSE 1011 (internal error) [2 bytes]
+2025-10-16 15:14:54,532 - DEBUG - > EOF
+2025-10-16 15:14:54,533 - DEBUG - x half-closing TCP connection
+2025-10-16 15:14:54,543 - DEBUG - < EOF
+2025-10-16 15:14:54,544 - DEBUG - = connection is CLOSED
+2025-10-16 15:14:54,561 - DEBUG - = connection is CONNECTING
+2025-10-16 15:14:54,571 - DEBUG - < GET / HTTP/1.1
+2025-10-16 15:14:54,572 - DEBUG - < Host: 192.168.16.166:8765
+2025-10-16 15:14:54,573 - DEBUG - < Upgrade: websocket
+2025-10-16 15:14:54,573 - DEBUG - < Connection: Upgrade
+2025-10-16 15:14:54,574 - DEBUG - < Sec-WebSocket-Key: HL7aQO2pPiCAAydYECTCYg==
+2025-10-16 15:14:54,574 - DEBUG - < Sec-WebSocket-Version: 13
+2025-10-16 15:14:54,574 - DEBUG - < Sec-WebSocket-Extensions: permessage-deflate; client_max_window_bits
+2025-10-16 15:14:54,575 - DEBUG - < User-Agent: Python/3.13 websockets/15.0.1
+2025-10-16 15:14:54,575 - DEBUG - > HTTP/1.1 101 Switching Protocols
+2025-10-16 15:14:54,576 - DEBUG - > Date: Thu, 16 Oct 2025 18:14:54 GMT
+2025-10-16 15:14:54,576 - DEBUG - > Upgrade: websocket
+2025-10-16 15:14:54,577 - DEBUG - > Connection: Upgrade
+2025-10-16 15:14:54,577 - DEBUG - > Sec-WebSocket-Accept: 6LRrnlSG4F9gXMSgaNSojh2tZkc=
+2025-10-16 15:14:54,577 - DEBUG - > Sec-WebSocket-Extensions: permessage-deflate; server_max_window_bits=12; client_max_window_bits=12
+2025-10-16 15:14:54,577 - DEBUG - > Server: Python/3.13 websockets/15.0.1
+2025-10-16 15:14:54,578 - DEBUG - = connection is OPEN
+2025-10-16 15:14:54,578 - INFO - connection open
+2025-10-16 15:14:54,579 - ERROR - connection handler failed
+Traceback (most recent call last):
+  File "C:\Users\user\AppData\Local\Programs\Python\Python313\Lib\site-packages\websockets\asyncio\server.py", line 376, in conn_handler
+    await self.handler(connection)
+          ~~~~~~~~~~~~^^^^^^^^^^^^
+TypeError: handler() missing 1 required positional argument: 'path'
+2025-10-16 15:14:54,580 - DEBUG - > CLOSE 1011 (internal error) [2 bytes]
+2025-10-16 15:14:54,580 - DEBUG - = connection is CLOSING
+2025-10-16 15:14:55,983 - INFO - server closing
+2025-10-16 15:15:03,525 - DEBUG - < CLOSE 1011 (internal error) [2 bytes]
+2025-10-16 15:15:03,526 - DEBUG - > EOF
+2025-10-16 15:15:03,527 - DEBUG - x half-closing TCP connection
+2025-10-16 15:15:03,533 - DEBUG - < EOF
+2025-10-16 15:15:03,534 - DEBUG - = connection is CLOSED
+2025-10-16 15:15:03,535 - INFO - server closed

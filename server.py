@@ -637,11 +637,11 @@ async def admin_estatisticas(request):
 # =============================================
 
 async def enviar_mensagem_terminal():
-    loop = asyncio.get_event_loop()
+    # loop = asyncio.get_event_loop()
     
-    print("\n" + "="*50)
-    print("🎮 MODO TERMINAL ATIVADO")
-    print("="*50)
+    # print("\n" + "="*50)
+    # print("🎮 MODO TERMINAL ATIVADO")
+    # print("="*50)
     
     while True:
         try:
@@ -880,7 +880,7 @@ async def main():
     print("="*50)
 
     # Envio de mensagens do terminal
-    await enviar_mensagem_terminal()
+    # await enviar_mensagem_terminal()
 
 if __name__ == "__main__":
     try:

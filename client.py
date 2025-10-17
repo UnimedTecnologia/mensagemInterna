@@ -23,8 +23,10 @@ except:
 usuario = getpass.getuser()  # Nome do usuário do Windows
 
 # Configurações para LOCAL
-### IP_SERVIDOR = "10.11.0.144" # LOCAL old ip
-IP_SERVIDOR = "10.10.8.34" # LOCAL
+# IP_SERVIDOR = "10.11.0.144" # LOCAL old ip
+# IP_SERVIDOR = "10.10.8.34" # MAQUINA LOCAL
+# IP_SERVIDOR = "127.0.0.1" # LOCALHOST
+IP_SERVIDOR = "192.168.16.166" # LOCAL
 PORTA = 8765 #LOCAL
 HTTP_SERVIDOR = f"http://{IP_SERVIDOR}:8081" # LOCAL
 
@@ -71,7 +73,6 @@ def show_registration_form(system_info):
         root.configure(bg='#008E55')
         root.resizable(False, False)
         root.attributes("-topmost", True)
-        
         
         # Centralizar na tela
         # root.eval('tk::PlaceWindow . center')
@@ -132,7 +133,7 @@ def show_registration_form(system_info):
         # Variável para controle
         cadastro_realizado = False
 
-                # Carregar setores do servidor
+        # Carregar setores do servidor
         def carregar_setores():
             try:
                 response = requests.get(f'{HTTP_SERVIDOR}/setores', timeout=5)
@@ -142,9 +143,6 @@ def show_registration_form(system_info):
                         setor_combo['values'] = setores
                         setor_combo.set(setores[0])  # Seleciona o primeiro por padrão
                         status_label.config(text="✅ Setores carregados - Selecione ou digite um novo", fg="green")
-                        
-                        # REMOVA ou COMENTE esta linha que focava no setor:
-                        # root.after(300, lambda: setor_combo.focus())  # ← REMOVA ESTA LINHA
                         
                     else:
                         status_label.config(text="⚠️ Nenhum setor cadastrado - Digite o nome do setor", fg="orange")

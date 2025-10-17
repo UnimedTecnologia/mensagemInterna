@@ -304,7 +304,13 @@
         const serverMessage = document.getElementById('serverMessage');
         const lastUpdate = document.getElementById('lastUpdate');
         // const IPSERVER = '10.10.8.34'; // Alterar conforme necessário
-        const IPSERVER = '127.0.0.1'; // localhost
+        // const IPSERVER = '127.0.0.1'; // localhost
+        const IPSERVER = '192.168.16.166'; // localhost
+        const PORTA_API = 8081 // localhost
+        //! servidor
+        // const IPSERVER = "127.0.0.1";  // ou "10.10.10.51"
+        // const IPSERVER = '10.10.10.51'; //! servidor
+        // const PORTA_API = 8088;        // HTTP REST (setores, usuarios, enviar)
 
 
         let setorAtual = 'todos';
@@ -315,7 +321,8 @@
         // Carregar setores disponíveis
         async function carregarSetores() {
             try {
-                const res = await fetch(`http://${IPSERVER}:8081/setores`); // TESTE LOCAL
+                // const res = await fetch(`http://${IPSERVER}:8081/setores`); // TESTE LOCAL
+                const res = await fetch(`http://${IPSERVER}:${PORTA_API}/setores`);
                 // const res = await fetch('http://10.10.10.51:8081/setores');
                 if (!res.ok) throw new Error('Servidor não respondeu');
                 
@@ -401,8 +408,7 @@
         // Função para buscar usuários online
         async function atualizarUsuarios() {
             try {
-                const res = await fetch(`http://${IPSERVER}:8081/usuarios`); // TESTE LOCAL
-                // const res = await fetch('http://10.10.10.51:8081/usuarios');
+                const res = await fetch(`http://${IPSERVER}:${PORTA_API}/usuarios`); 
                 if (!res.ok) throw new Error('Servidor não respondeu');
                 
                 usuariosOnline = await res.json();
@@ -540,8 +546,7 @@
                 submitButton.disabled = true;
 
                 // Envia via servidor Python
-                const response = await fetch(`http://${IPSERVER}:8081/enviar`, {  // TESTE LOCAL
-                // const response = await fetch('http://10.10.10.51:8081/enviar', { 
+                const response = await fetch(`http://${IPSERVER}:${PORTA_API}/enviar`, {  
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)

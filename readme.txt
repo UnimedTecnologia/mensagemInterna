@@ -8,12 +8,23 @@ CLIENT
 cd C:\xampp\htdocs\mensagemInterna
 python client.py
 
-
-
-
 GERAR EXECUTAVEL DO CLIENT PYTHON
 INSTALAR -----> pip install pyinstaller
+
+cd C:\xampp\htdocs\mensagemInterna
 pyinstaller --onefile --noconsole client.py
+
+__________________________________________________
+ACESSAR NO SERVIDOR LINUX
+No Windows powershell:
+ssh -L 8088:localhost:8088 unimed@10.10.10.51
+senha: Y1tTr2ybpLttC0R1
+
+Caminho server.py do servidor Linux:
+cd /var/www/html/mensagemInterna
+python3 server.py
+__________________________________________________
+
 
 ---------CONFIGURAÇÃO SERVIDOR------------------------------------------------------
 NO WINDOWS:
