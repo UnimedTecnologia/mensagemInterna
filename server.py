@@ -635,77 +635,15 @@ async def admin_estatisticas(request):
 # =============================================
 # ENVIO VIA TERMINAL (EXISTENTE)
 # =============================================
+async def mostrar_status_inicial():
+    print("\n" + "=" * 50)
+    print("🚀 SERVIDOR DE MENSAGENS INICIADO")
+    print("=" * 50)
+    print(f"🕒 Horário de inicialização: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
+    print(f"📂 Setores cadastrados: {len(get_setores())}")
+    print("=" * 50)
+    print("⏳ Aguardando novas conexões...\n")
 
-async def enviar_mensagem_terminal():
-    # loop = asyncio.get_event_loop()
-    
-    # print("\n" + "="*50)
-    # print("🎮 MODO TERMINAL ATIVADO")
-    # print("="*50)
-    
-    while True:
-        try:
-            print(f"\n📊 Estatísticas:")
-            print(f"   👥 Clientes conectados: {len(clientes)}")
-            print(f"   👤 Usuários únicos: {len(clientes_info)}")
-            
-            # Mostrar usuários online
-            if clientes_info:
-                print(f"\n🟢 Usuários Online:")
-                for client_id, info in clientes_info.items():
-                    print(f"   • {info['username']} ({info.get('setor', 'N/A')}) - ID: {client_id[:8]}")
-            
-            print("\n🔧 Opções:")
-            print("   1. 📢 Enviar para todos")
-            print("   2. 🎯 Enviar para setor específico")
-            print("   3. 🔄 Atualizar lista")
-            print("   4. ❌ Sair")
-            
-            opcao = await loop.run_in_executor(None, input, "\nEscolha uma opção (1-4): ")
-            
-            if opcao == '4':
-                break
-            elif opcao == '3':
-                continue
-            elif opcao in ['1', '2']:
-                setor_destino = None
-                
-                if opcao == '2':
-                    setores = get_setores()
-                    if not setores:
-                        print("❌ Nenhum setor cadastrado no banco!")
-                        continue
-                        
-                    print("\n📂 Setores disponíveis:")
-                    for i, setor in enumerate(setores, 1):
-                        print(f"   {i}. {setor}")
-                    
-                    try:
-                        setor_idx = await loop.run_in_executor(None, input, "\nEscolha o setor (número): ")
-                        setor_destino = setores[int(setor_idx) - 1]
-                        print(f"🎯 Setor selecionado: {setor_destino}")
-                    except (ValueError, IndexError):
-                        print("❌ Setor inválido!")
-                        continue
-                
-                msg = await loop.run_in_executor(None, input, "\n💬 Digite a mensagem: ")
-                
-                if msg.strip():
-                    message_data = {
-                        'type': 'text',
-                        'content': msg,
-                        'sender': 'TERMINAL',
-                        'timestamp': datetime.now().isoformat()
-                    }
-                    await broadcast_message(message_data, 'TERMINAL', setor_destino)
-                    print(f"✅ Mensagem enviada!")
-                else:
-                    print("❌ Mensagem vazia!")
-            else:
-                print("❌ Opção inválida!")
-                
-        except Exception as e:
-            print(f"❌ Erro no terminal: {e}")
 
 
 async def admin_verificar_usuario(request):
@@ -839,8 +777,7 @@ async def main():
     
     # Servidor WebSocket
     ws_server = await websockets.serve(handler, "0.0.0.0", PORTA_WS)
-    
-    print("🚀 Servidor WebSocket iniciado em ws://0.0.0.0:",PORTA_WS)
+    print("🚀 Servidor WebSocket iniciado em ws://0.0.0.0:", PORTA_WS)
 
     # Servidor HTTP aiohttp
     app = web.Application()
@@ -868,19 +805,17 @@ async def main():
     await runner.setup()
     site = web.TCPSite(runner, '0.0.0.0', PORTA_HTTP)
     await site.start()
-    print("🌐 Servidor HTTP para painel iniciado em http://0.0.0.0:",PORTA_HTTP)
+    print("🌐 Servidor HTTP para painel iniciado em http://0.0.0.0:", PORTA_HTTP)
     
     print("\n" + "="*50)
     print("✅ SISTEMA INICIADO COM SUCESSO!")
     print("="*50)
-    print(f"📊 Clientes conectados: {len(clientes)}")
-    print(f"📂 Setores cadastrados: {len(get_setores())}")
-    # print("🎮 Painel Admin disponível em: http://10.10.10.51:8081/painel_admin.php")
-    # print("📱 Painel Mensagens disponível em: http://10.10.10.51:8081/painel.php")
-    print("="*50)
+    
+    # Mostrar informações iniciais
+    await mostrar_status_inicial()
 
-    # Envio de mensagens do terminal
-    # await enviar_mensagem_terminal()
+    # Manter o servidor ativo
+    await ws_server.wait_closed()
 
 if __name__ == "__main__":
     try:

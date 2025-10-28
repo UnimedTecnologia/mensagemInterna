@@ -13,27 +13,70 @@
             min-height: 100vh;
         }
         .container {
-            max-width: 900px;
+            max-width: 1200px;
             margin: 0 auto;
             background: white;
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             overflow: hidden;
         }
+        
+        /* HEADER MELHORADO */
         .header {
-            background: #008E55;
+            background: linear-gradient(135deg, #008E55 0%, #006b41 100%);
             color: white;
-            padding: 20px;
-            text-align: center;
+            padding: 25px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
-        .header h2 {
+        .header::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #00b368, #ffffff, #00b368);
+        }
+        .logo-container {
+            display: flex;
+            align-items: center;
+        }
+        .logo {
+            height: 70px;
+            margin-right: 20px;
+            border-radius: 8px; 
+            padding: 5px; /* Espaço ao redor da logo */
+            box-shadow: 0 5px 8px rgba(0,0,0,0.1); /* Sombra sutil */
+        }
+        .header-text {
+            flex: 1;
+        }
+        .header h1 {
             margin: 0;
-            font-size: 24px;
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
         }
         .header p {
-            margin: 5px 0 0 0;
+            margin: 8px 0 0 0;
             opacity: 0.9;
+            font-size: 16px;
+            font-weight: 300;
         }
+        .header-badge {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: 500;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
         .content {
             padding: 30px;
         }
@@ -97,6 +140,7 @@
 
         .form-group {
             margin-bottom: 20px;
+            margin-right: 30px;
         }
         label {
             display: block;
@@ -218,13 +262,37 @@
         .server-offline {
             background: #dc3545;
         }
+        
+        /* Responsividade para o header */
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                text-align: center;
+                padding: 20px;
+            }
+            .logo-container {
+                margin-bottom: 15px;
+                justify-content: center;
+            }
+            .header-badge {
+                margin-top: 15px;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h2>Painel de Mensagens - Unimed</h2>
-            <p>Envie mensagens por setor ou para todos os colaboradores</p>
+            <div class="logo-container">
+                <img src="logo_unimed.png" alt="Logo Unimed" class="logo">
+                <div class="header-text">
+                    <h1>Painel de Mensagens</h1>
+                    <p>Envie mensagens por setor ou para todos os colaboradores</p>
+                </div>
+            </div>
+            <div class="header-badge">
+                Sistema de Comunicação Interna
+            </div>
         </div>
         
         <div class="content">
@@ -260,12 +328,12 @@
 
                 <div class="form-group">
                     <label for="mensagem">💬 Mensagem:</label>
-                    <textarea name="mensagem" id="mensagem" placeholder="Digite sua mensagem aqui..." required></textarea>
+                    <textarea name="mensagem" id="mensagem" placeholder="Digite sua mensagem aqui..." required ></textarea>
                 </div>
 
                 <div class="image-section">
                     <label for="imageUpload">📎 Anexar Imagem (Opcional):</label>
-                    <input type="file" id="imageUpload" accept="image/*">
+                    <input type="file" id="imageUpload" accept="image/*" style="width: 750px;">
                     <div id="imagePreviewContainer">
                         <img id="imagePreview" class="image-preview">
                     </div>
@@ -288,6 +356,7 @@
     </div>
 
     <script>
+        // ... (o JavaScript permanece exatamente o mesmo)
         const listaUsuarios = document.getElementById('listaUsuarios');
         const form = document.getElementById('formMensagem');
         const status = document.getElementById('status');
@@ -303,12 +372,12 @@
         const serverStatus = document.getElementById('serverStatus');
         const serverMessage = document.getElementById('serverMessage');
         const lastUpdate = document.getElementById('lastUpdate');
-        // const IPSERVER = '10.10.8.34'; // Alterar conforme necessário
-        // const IPSERVER = '127.0.0.1'; // localhost
-        const IPSERVER = '192.168.16.166'; // localhost
-        const PORTA_API = 8081 // localhost
+        //! local
+        // const IPSERVER = '192.168.16.166'; // localhost
+        const IPSERVER = '192.168.1.253'; // localhost
+        const PORTA_API = 8081; // localhost
+        
         //! servidor
-        // const IPSERVER = "127.0.0.1";  // ou "10.10.10.51"
         // const IPSERVER = '10.10.10.51'; //! servidor
         // const PORTA_API = 8088;        // HTTP REST (setores, usuarios, enviar)
 

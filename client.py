@@ -1,3 +1,5 @@
+import warnings
+warnings.filterwarnings("ignore")
 import asyncio
 import websockets
 import getpass
@@ -13,6 +15,7 @@ import socket
 import platform
 import requests
 import uuid
+import re 
 try:
     from win10toast import ToastNotifier
     toaster = ToastNotifier()
@@ -20,63 +23,403 @@ except:
     toaster = None
 
 # Configurações
-usuario = getpass.getuser()  # Nome do usuário do Windows
+usuario = getpass.getuser()
 
-# Configurações para LOCAL
-# IP_SERVIDOR = "10.11.0.144" # LOCAL old ip
-# IP_SERVIDOR = "10.10.8.34" # MAQUINA LOCAL
-# IP_SERVIDOR = "127.0.0.1" # LOCALHOST
-IP_SERVIDOR = "192.168.16.166" # LOCAL
+# //* Configurações para LOCAL
+IP_SERVIDOR = "192.168.1.253" # LOCAL
 PORTA = 8765 #LOCAL
 HTTP_SERVIDOR = f"http://{IP_SERVIDOR}:8081" # LOCAL
 
-# //! Configurações para SERVIDOR 
-# IP_SERVIDOR = "10.10.10.51" 
-# PORTA = 8080
-# HTTP_SERVIDOR = f"http://{IP_SERVIDOR}:8088"
-
-# Caminho para o logo da Unimed (ajuste conforme necessário)
-LOGO_PATH = "logo_unimed.png"  # Coloque o logo na mesma pasta do client.py
+LOGO_PATH = "logo_unimed.png"
 
 # =============================================
-# SISTEMA DE IDENTIFICAÇÃO ÚNICA (NOVO)
+# SISTEMA MELHORADO DE JANELAS - SOLUÇÃO DEFINITIVA
+# =============================================
+
+class WindowManager:
+    """Gerenciador de janelas com solução definitiva para imagens"""
+    def __init__(self):
+        self.window_count = 0
+        self.logo_image = None
+        self._load_logo()
+    
+    def _load_logo(self):
+        """Carrega o logo uma vez"""
+        if os.path.exists(LOGO_PATH):
+            try:
+                logo_img = Image.open(LOGO_PATH)
+                logo_img = logo_img.resize((100, 40), Image.Resampling.LANCZOS)
+                self.logo_image = ImageTk.PhotoImage(logo_img)
+            except Exception as e:
+                print(f"⚠️ Erro ao carregar logo: {e}")
+
+# Instância global
+window_manager = WindowManager()
+
+def show_popup(titulo, mensagem, icon_path=None, message_data=None):
+    """Popup Tkinter com solução definitiva para múltiplas imagens"""
+    
+    def _create_window():
+        try:
+            # Criar nova instância Tk para cada mensagem - ISOLADA
+            root = tk.Tk()
+            root.title(titulo)
+            root.configure(bg='#f0f2f5')
+            root.minsize(500, 400)
+            root.resizable(True, True)
+            # Manter por 1 segundo no topo, depois liberar
+            root.attributes("-topmost", True)
+            root.after(1000, lambda: root.attributes("-topmost", False))
+
+            # Container principal
+            main_frame = tk.Frame(root, bg='#f0f2f5')
+            main_frame.pack(fill=tk.BOTH, expand=True, padx=0, pady=0)
+
+            # Header fixo
+            header_frame = tk.Frame(main_frame, bg='#008E55', height=80)
+            header_frame.pack(fill=tk.X, padx=0, pady=0)
+            header_frame.pack_propagate(False)
+            
+            header_content = tk.Frame(header_frame, bg='#008E55')
+            header_content.pack(fill=tk.BOTH, expand=True, padx=20, pady=10)
+            
+            if window_manager.logo_image:
+                logo_label = tk.Label(header_content, image=window_manager.logo_image, bg='#008E55')
+                logo_label.image = window_manager.logo_image
+                logo_label.pack(side=tk.LEFT)
+            
+            title_container = tk.Frame(header_content, bg='#008E55')
+            title_container.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(15, 0))
+            
+            main_title = tk.Label(title_container, 
+                                text="Mensagem Interna - Unimed", 
+                                font=('Arial', 14, 'bold'), 
+                                fg='white', 
+                                bg='#008E55')
+            main_title.pack(anchor='w')
+            
+            sub_title = tk.Label(title_container, 
+                              text="Comunicação Corporativa", 
+                              font=('Arial', 9), 
+                              fg='#e8f5e8', 
+                              bg='#008E55')
+            sub_title.pack(anchor='w', pady=(2, 0))
+
+            # Frame de conteúdo com scroll
+            content_container = tk.Frame(main_frame, bg='#ffffff')
+            content_container.pack(fill=tk.BOTH, expand=True, padx=0, pady=0)
+
+            # Criar canvas e scrollbar
+            canvas = tk.Canvas(content_container, bg='#ffffff', highlightthickness=0)
+            scrollbar = ttk.Scrollbar(content_container, orient="vertical", command=canvas.yview)
+            scrollable_frame = tk.Frame(canvas, bg='#ffffff')
+
+            # Configurar scroll
+            scrollable_frame.bind(
+                "<Configure>",
+                lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+            )
+
+            canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+            canvas.configure(yscrollcommand=scrollbar.set)
+
+            # Empacotar
+            canvas.pack(side="left", fill="both", expand=True)
+            scrollbar.pack(side="right", fill="y")
+
+            # Scroll com mouse
+            def _on_mousewheel(event):
+                canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+            
+            canvas.bind("<MouseWheel>", _on_mousewheel)
+
+            # Conteúdo da mensagem
+            content_frame = tk.Frame(scrollable_frame, bg='#ffffff')
+            content_frame.pack(fill=tk.BOTH, expand=True, padx=25, pady=25)
+
+            # Cabeçalho da mensagem
+            header_message = tk.Frame(content_frame, bg='#ffffff')
+            header_message.pack(fill=tk.X, pady=(0, 20))
+
+            # Ícone e informações
+            message_type = message_data.get('type', 'text') if message_data else 'text'
+            icon = "📷" if message_type == 'image' else "💬"
+            
+            icon_label = tk.Label(header_message, text=icon, font=('Arial', 16), bg='#ffffff')
+            icon_label.pack(side=tk.LEFT, padx=(0, 10))
+
+            info_frame = tk.Frame(header_message, bg='#ffffff')
+            info_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+            sender_name = tk.Label(info_frame, 
+                                 text=f"De: {message_data.get('sender', 'Sistema')}",
+                                 font=('Arial', 11, 'bold'),
+                                 bg='#ffffff',
+                                 fg='#2c3e50')
+            sender_name.pack(anchor='w')
+
+            timestamp = message_data.get('timestamp', '')[:19] if message_data else ''
+            time_label = tk.Label(info_frame, 
+                                text=timestamp, 
+                                font=('Arial', 9),
+                                bg='#ffffff',
+                                fg='#7f8c8d')
+            time_label.pack(anchor='w', pady=(2, 0))
+
+            # Badge de tipo
+            type_badge = tk.Frame(header_message, bg='#e8f5e8', relief='flat', bd=1)
+            type_badge.pack(side=tk.RIGHT, padx=(10, 0))
+            
+            type_text = "IMAGEM" if message_type == 'image' else "TEXTO"
+            type_label = tk.Label(type_badge, 
+                                text=type_text,
+                                font=('Arial', 8, 'bold'),
+                                bg='#e8f5e8',
+                                fg='#008E55',
+                                padx=8,
+                                pady=2)
+            type_label.pack()
+
+            # Container da mensagem
+            message_container = tk.Frame(content_frame, bg='#f8f9fa', relief='flat', bd=1)
+            message_container.pack(fill=tk.BOTH, expand=True, pady=(0, 20))
+
+            message_inner = tk.Frame(message_container, bg='#ffffff')
+            message_inner.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
+
+            # SOLUÇÃO DEFINITIVA: Cada janela tem seu próprio namespace de imagens
+            image_references = []  # Lista para manter referências FORTES
+
+            if message_data and message_data.get('type') == 'image':
+                try:
+                    # Configurar tamanho para imagens
+                    root.geometry("650x700")
+                    
+                    # Texto adicional
+                    texto_adicional = message_data.get('texto_adicional', '')
+                    if texto_adicional:
+                        text_frame = tk.Frame(message_inner, bg='#ffffff')
+                        text_frame.pack(fill=tk.X, pady=(0, 20))
+                        
+                        text_label = tk.Label(text_frame, 
+                                            text=texto_adicional, 
+                                            wraplength=580, 
+                                            justify="left",
+                                            font=('Arial', 11),
+                                            bg='#ffffff',
+                                            fg='#2c3e50')
+                        text_label.pack(anchor='w')
+                    
+                    # SOLUÇÃO: Processamento de imagem isolado por janela
+                    image_data = base64.b64decode(message_data['content'])
+                    
+                    # Usar BytesIO para carregar a imagem
+                    image_buffer = io.BytesIO(image_data)
+                    original_image = Image.open(image_buffer)
+                    
+                    # Calcular tamanho proporcional
+                    max_width = 580
+                    max_height = 400
+                    
+                    # Manter proporção
+                    ratio = min(max_width/original_image.width, max_height/original_image.height)
+                    new_width = int(original_image.width * ratio)
+                    new_height = int(original_image.height * ratio)
+                    
+                    # Redimensionar
+                    resized_image = original_image.resize((new_width, new_height), Image.Resampling.LANCZOS)
+                    
+                    # CONVERTER para formato compatível com Tkinter
+                    if resized_image.mode in ('RGBA', 'LA'):
+                        # Converter imagens com transparência para RGB
+                        background = Image.new('RGB', resized_image.size, (255, 255, 255))
+                        background.paste(resized_image, mask=resized_image.split()[-1] if resized_image.mode == 'RGBA' else None)
+                        resized_image = background
+                    
+                    # Criar PhotoImage - REFERÊNCIA FORTE na lista
+                    photo_image = ImageTk.PhotoImage(resized_image, master=root)
+                    image_references.append(photo_image)  # MANTER REFERÊNCIA
+                    
+                    # Frame para imagem centralizada
+                    image_frame = tk.Frame(message_inner, bg='#ffffff')
+                    image_frame.pack(fill=tk.BOTH, expand=True)
+                    
+                    # Criar label da imagem
+                    img_label = tk.Label(image_frame, image=photo_image, bg='#ffffff')
+                    img_label.image = photo_image  # Referência adicional
+                    img_label.pack(expand=True)
+                    
+                    # Informações da imagem
+                    info_frame = tk.Frame(message_inner, bg='#ffffff')
+                    info_frame.pack(fill=tk.X, pady=(15, 0))
+                    
+                    filename = message_data.get('filename', 'imagem.png')
+                    file_info = tk.Label(info_frame, 
+                                       text=f"📎 {filename} | 📏 {original_image.width}×{original_image.height} → {new_width}×{new_height}",
+                                       font=('Arial', 9),
+                                       bg='#ffffff',
+                                       fg='#7f8c8d')
+                    file_info.pack(anchor='w')
+                    
+                    # Fechar buffer
+                    image_buffer.close()
+                    
+                    print(f"🖼️ Imagem carregada com sucesso: {filename} ({new_width}x{new_height})")
+                    
+                except Exception as e:
+                    print(f"❌ Erro ao carregar imagem: {e}")
+                    error_frame = tk.Frame(message_inner, bg='#ffffff')
+                    error_frame.pack(fill=tk.BOTH, expand=True)
+                    
+                    error_label = tk.Label(error_frame, 
+                                         text=f"❌ Erro ao carregar imagem\n{str(e)}", 
+                                         fg='#e74c3c', 
+                                         wraplength=500,
+                                         font=('Arial', 10),
+                                         bg='#ffffff',
+                                         justify='center')
+                    error_label.pack(expand=True)
+            else:
+                # Mensagem de texto
+                root.geometry("600x550")
+                
+                # Frame para texto com scroll interno se necessário
+                text_container = tk.Frame(message_inner, bg='#ffffff')
+                text_container.pack(fill=tk.BOTH, expand=True)
+                
+                # Texto da mensagem
+                text_frame = tk.Frame(text_container, bg='#ffffff')
+                text_frame.pack(fill=tk.BOTH, expand=True)
+                
+                # Usar Text widget para melhor controle de texto longo
+                text_widget = tk.Text(text_frame, 
+                                    wrap=tk.WORD,
+                                    font=('Arial', 11),
+                                    bg='#ffffff',
+                                    fg='#2c3e50',
+                                    padx=10,
+                                    pady=10,
+                                    relief='flat',
+                                    borderwidth=0,
+                                    highlightthickness=0)
+                
+                # Inserir texto
+                text_widget.insert('1.0', mensagem)
+                text_widget.config(state='disabled')  # Tornar readonly
+                
+                # Scrollbar para texto muito longo
+                text_scrollbar = ttk.Scrollbar(text_frame, orient="vertical", command=text_widget.yview)
+                text_widget.configure(yscrollcommand=text_scrollbar.set)
+                
+                text_widget.pack(side="left", fill="both", expand=True)
+                text_scrollbar.pack(side="right", fill="y")
+
+            # Botão de fechar
+            button_frame = tk.Frame(content_frame, bg='#ffffff')
+            button_frame.pack(fill=tk.X, pady=(20, 0))
+            
+            btn_close = tk.Button(button_frame, 
+                               text="✓ Entendi", 
+                               command=lambda: _safe_destroy(root, image_references), 
+                               font=('Arial', 11, 'bold'),
+                               bg='#008E55',
+                               fg='white',
+                               padx=30,
+                               pady=10,
+                               relief='flat',
+                               cursor='hand2')
+            btn_close.pack(pady=10)
+            
+            # Efeitos hover
+            def on_enter(e):
+                btn_close.config(bg='#006b41')
+            def on_leave(e):
+                btn_close.config(bg='#008E55')
+            
+            btn_close.bind("<Enter>", on_enter)
+            btn_close.bind("<Leave>", on_leave)
+
+            # Configurar fechamento seguro
+            def _safe_destroy(window, img_refs):
+                window_manager.window_count -= 1
+                # Fechar janela primeiro
+                window.destroy()
+                # As referências serão liberadas automaticamente pelo garbage collector
+                print(f"📁 Janela fechada ({window_manager.window_count} restantes)")
+
+            root.protocol("WM_DELETE_WINDOW", lambda: _safe_destroy(root, image_references))
+
+            # Posicionamento inteligente
+            window_manager.window_count += 1
+            root.update_idletasks()
+            
+            # Calcular posição com offset
+            width = root.winfo_width()
+            height = root.winfo_height()
+            offset = (window_manager.window_count % 4) * 30
+            
+            x = (root.winfo_screenwidth() // 2) - (width // 2) + offset
+            y = (root.winfo_screenheight() // 2) - (height // 2) + offset
+            root.geometry(f"+{x}+{y}")
+
+            # Focar na janela
+            root.focus_force()
+            root.lift()
+
+            print(f"📁 Nova janela aberta ({window_manager.window_count} total)")
+
+            # Ajustar scroll para o topo
+            canvas.update_idletasks()
+            canvas.yview_moveto(0.0)
+            
+            # SOLUÇÃO CRÍTICA: Manter referência da janela root
+            def keep_alive():
+                try:
+                    root.mainloop()
+                except Exception as e:
+                    print(f"Janela finalizada: {e}")
+            
+            keep_alive()
+
+        except Exception as e:
+            print(f"❌ Erro crítico ao criar janela: {e}")
+
+    # Executar em thread separada
+    Thread(target=_create_window, daemon=True).start()
+
+# =============================================
+# FUNÇÕES ORIGINAIS (MANTIDAS)
 # =============================================
 
 def get_system_unique_id():
-    """Gera um ID único baseado nas informações da máquina"""
+    """Gera um ID único baseado no hostname e usuário"""
     try:
         hostname = socket.gethostname()
         username = getpass.getuser()
         
-        # Tenta obter o endereço MAC para mais unicidade
-        mac = ':'.join(['{:02x}'.format((uuid.getnode() >> elements) & 0xff) 
-                       for elements in range(0, 2*6, 2)][::-1])
+        hostname_clean = re.sub(r'[^a-zA-Z0-9]', '', hostname)
+        username_clean = re.sub(r'[^a-zA-Z0-9]', '', username)
         
-        # Combina as informações para criar um ID único
-        unique_id = f"{hostname}_{username}_{mac}"
+        unique_id = f"{hostname_clean}_{username_clean}"
+        
+        print(f"🔑 ID único gerado: {unique_id}")
         return unique_id
+        
     except Exception as e:
         print(f"⚠️ Erro ao gerar ID único: {e}")
-        # Fallback: usa apenas username + hostname
         return f"{getpass.getuser()}_{socket.gethostname()}"
-
-# =============================================
-# FORMULÁRIO DE CADASTRO AUTOMÁTICO (NOVO)
-# =============================================
 
 def show_registration_form(system_info):
     """Mostra formulário de cadastro para novos usuários"""
     def _form():
         root = tk.Tk()
         root.title("Cadastro - Unimed")
-        root.geometry("500x650+100+40")
+        root.geometry("500x400")
         root.configure(bg='#008E55')
         root.resizable(False, False)
         root.attributes("-topmost", True)
         
-        # Centralizar na tela
-        # root.eval('tk::PlaceWindow . center')
-
+        
         # Header
         header = tk.Frame(root, bg='#008E55', height=80)
         header.pack(fill=tk.X, padx=0, pady=0)
@@ -100,140 +443,18 @@ def show_registration_form(system_info):
         tk.Label(info_frame, text=f"Usuário Windows: {system_info['username']}", 
                 font=('Arial', 9), bg='#f8f9fa').pack(anchor='w', padx=10, pady=(0,10))
 
-        # Formulário
-        form_frame = tk.Frame(container, bg='white')
-        form_frame.pack(fill=tk.BOTH, expand=True)
-
-        # Nome Completo
-        tk.Label(form_frame, text="Nome Completo:*", 
-                font=('Arial', 10, 'bold'), bg='white').pack(anchor='w', pady=(5,2))
-        nome_entry = tk.Entry(form_frame, font=('Arial', 11), width=40)
-        nome_entry.pack(fill=tk.X, pady=(0,10))
-        nome_entry.focus() # //* Foca no campo nome inicialmente
-
-        # Setor
-        tk.Label(form_frame, text="Setor:*", 
-                font=('Arial', 10, 'bold'), bg='white').pack(anchor='w', pady=(5,2))
-        setor_var = tk.StringVar(root)
-        setor_combo = ttk.Combobox(form_frame, textvariable=setor_var, 
-                                font=('Arial', 11), width=38, state="normal")  # ← AGORA EDITÁVEL
-        setor_combo['values'] = ['Carregando setores...']
-        setor_combo.pack(fill=tk.X, pady=(0,10))
-
-        # Matrícula (opcional)
-        tk.Label(form_frame, text="Matrícula (opcional):", 
-                font=('Arial', 10, 'bold'), bg='white').pack(anchor='w', pady=(5,2))
-        matricula_entry = tk.Entry(form_frame, font=('Arial', 11), width=40)
-        matricula_entry.pack(fill=tk.X, pady=(0,20))
-
-        # Status
-        status_label = tk.Label(form_frame, text="", font=('Arial', 9), bg='white')
-        status_label.pack(pady=5)
-
-        # Variável para controle
-        cadastro_realizado = False
-
-        # Carregar setores do servidor
-        def carregar_setores():
-            try:
-                response = requests.get(f'{HTTP_SERVIDOR}/setores', timeout=5)
-                if response.status_code == 200:
-                    setores = response.json()
-                    if setores:
-                        setor_combo['values'] = setores
-                        setor_combo.set(setores[0])  # Seleciona o primeiro por padrão
-                        status_label.config(text="✅ Setores carregados - Selecione ou digite um novo", fg="green")
-                        
-                    else:
-                        status_label.config(text="⚠️ Nenhum setor cadastrado - Digite o nome do setor", fg="orange")
-                else:
-                    status_label.config(text="❌ Erro ao carregar setores - Digite manualmente", fg="red")
-            except Exception as e:
-                status_label.config(text="❌ Servidor indisponível - Digite manualmente", fg="red")
-                print(f"Erro ao carregar setores: {e}")
-
-        # Botão de cadastro
-        def cadastrar():
-            nonlocal cadastro_realizado
-            nome = nome_entry.get().strip()
-            setor = setor_var.get().strip()
-            matricula = matricula_entry.get().strip()
-
-            if not nome:
-                status_label.config(text="❌ Preencha o nome completo!", fg="red")
-                nome_entry.focus()
-                return
-
-            if not setor or setor == 'Carregando setores...':
-                status_label.config(text="❌ Selecione um setor!", fg="red")
-                setor_combo.focus()
-                return
-
-            try:
-                dados = {
-                    'username': system_info['unique_id'],
-                    'nome_completo': nome,
-                    'setor': setor,
-                    'matricula': matricula,
-                    'hostname': system_info['hostname']
-                }
-                
-                status_label.config(text="⏳ Realizando cadastro...", fg="blue")
-                
-                response = requests.post(
-                    f'{HTTP_SERVIDOR}/admin/cadastro_usuario', 
-                    json=dados, 
-                    timeout=10
-                )
-                
-                if response.status_code == 200:
-                    result = response.json()
-                    if result['status'] == 'ok':
-                        status_label.config(text="✅ Cadastro realizado com sucesso!", fg="green")
-                        cadastro_realizado = True
-                        # Fecha após 2 segundos
-                        root.after(2000, root.destroy)
-                    else:
-                        status_label.config(text=f"❌ Erro: {result.get('detalhes', 'Erro desconhecido')}", fg="red")
-                else:
-                    status_label.config(text="❌ Erro no servidor", fg="red")
-                    
-            except requests.exceptions.Timeout:
-                status_label.config(text="❌ Tempo esgotado - tente novamente", fg="red")
-            except requests.exceptions.ConnectionError:
-                status_label.config(text="❌ Erro de conexão - verifique o servidor", fg="red")
-            except Exception as e:
-                status_label.config(text="❌ Erro inesperado", fg="red")
-                print(f"Erro no cadastro: {e}")
-
-        # Botão cadastrar
-        btn_cadastrar = tk.Button(form_frame, text="📋 Realizar Cadastro", 
-                                command=cadastrar, font=('Arial', 12, 'bold'),
-                                bg='#008E55', fg='white', padx=20, pady=8)
-        btn_cadastrar.pack(pady=5)
-
-        # Botão cancelar (opcional)
-        btn_cancelar = tk.Button(form_frame, text="⏩ Pular Cadastro", 
-                                command=root.destroy, font=('Arial', 10),
-                                bg='#6c757d', fg='white', padx=15, pady=5)
-        btn_cancelar.pack(pady=5)
-
-        # Enter no formulário executa cadastro
-        def on_enter(event):
-            cadastrar()
+        # Botão simples
+        btn_frame = tk.Frame(container, bg='white')
+        btn_frame.pack(fill=tk.X, pady=20)
         
-        nome_entry.bind('<Return>', on_enter)
-        setor_combo.bind('<Return>', on_enter)
-        matricula_entry.bind('<Return>', on_enter)
-
-        # Carregar setores após a interface estar pronta
-        root.after(100, carregar_setores)
-        
-        # Focar no campo nome
-        root.after(200, lambda: nome_entry.focus())
+        btn = tk.Button(btn_frame, text="✅ Cadastro Automático", 
+                      command=root.destroy,
+                      font=('Arial', 12, 'bold'),
+                      bg='#008E55', fg='white', padx=20, pady=10)
+        btn.pack()
         
         root.mainloop()
-        return cadastro_realizado
+        return True
 
     return _form()
 
@@ -250,7 +471,7 @@ def get_system_info():
             'username': username,
             'os': sistema_operacional,
             'platform': platform.platform(),
-            'unique_id': unique_id  # ← ID único para cadastro
+            'unique_id': unique_id
         }
         return system_info
     except Exception as e:
@@ -277,226 +498,8 @@ def verificar_usuario_cadastrado(unique_id):
         print(f"❌ Erro inesperado na verificação: {e}")
         return False
 
-def show_popup(titulo, mensagem, icon_path=None, message_data=None):
-    """Popup Tkinter personalizado com logo da Unimed e scroll"""
-    def _popup():
-        root = tk.Tk()
-        root.title(titulo)
-        root.attributes("-topmost", True)
-        root.resizable(True, True)
-        root.configure(bg='#008E55')  # Cor Unimed
-        root.minsize(500, 400)  # Tamanho mínimo
-
-        # Tenta carregar o logo
-        logo_image = None
-        try:
-            if os.path.exists(LOGO_PATH):
-                logo_img = Image.open(LOGO_PATH)
-                logo_img = logo_img.resize((100, 40), Image.Resampling.LANCZOS)
-                logo_image = ImageTk.PhotoImage(logo_img)
-        except Exception as e:
-            print(f"⚠️ Erro ao carregar logo: {e}")
-
-        # Header com logo (fixo - sem scroll)
-        header_frame = tk.Frame(root, bg='#008E55', height=60)
-        header_frame.pack(fill=tk.X, padx=0, pady=0)
-        header_frame.pack_propagate(False)  # Mantém o tamanho fixo
-        
-        if logo_image:
-            logo_label = tk.Label(header_frame, image=logo_image, bg='#008E55')
-            logo_label.image = logo_image
-            logo_label.pack(side=tk.LEFT, padx=10, pady=10)
-        
-        title_label = tk.Label(header_frame, 
-                             text="Mensagem Interna - Unimed", 
-                             font=('Arial', 12, 'bold'), 
-                             fg='white', 
-                             bg='#008E55')
-        title_label.pack(side=tk.LEFT, padx=5, pady=10)
-
-        # Frame principal com scroll
-        main_frame = tk.Frame(root, bg='white')
-        main_frame.pack(fill=tk.BOTH, expand=True, padx=2, pady=2)
-
-        # Canvas e Scrollbar
-        canvas = tk.Canvas(main_frame, bg='white', highlightthickness=0)
-        scrollbar = tk.Scrollbar(main_frame, orient="vertical", command=canvas.yview)
-        scrollable_frame = tk.Frame(canvas, bg='white')
-
-        scrollable_frame.bind(
-            "<Configure>",
-            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
-        )
-
-        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
-        canvas.configure(yscrollcommand=scrollbar.set)
-
-        # Empacotar canvas e scrollbar
-        canvas.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
-
-        # Configurar scroll com mouse
-        def _on_mousewheel(event):
-            canvas.yview_scroll(int(-1*(event.delta/120)), "units")
-        
-        canvas.bind("<MouseWheel>", _on_mousewheel)
-        scrollable_frame.bind("<MouseWheel>", _on_mousewheel)
-
-        # Exibe conteúdo baseado no tipo
-        if message_data and message_data.get('type') == 'image':
-            try:
-                root.geometry("600x650")  # Tamanho inicial maior
-                
-                # Frame do conteúdo
-                content_frame = tk.Frame(scrollable_frame, bg='white')
-                content_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
-                
-                # Informações do remetente
-                sender_frame = tk.Frame(content_frame, bg='white')
-                sender_frame.pack(fill=tk.X, pady=(0, 15))
-                
-                sender_label = tk.Label(sender_frame, 
-                                      text=f"De: {message_data.get('sender', 'Unknown')}",
-                                      font=('Arial', 10, 'bold'),
-                                      bg='white',
-                                      fg='#333333')
-                sender_label.pack(side=tk.LEFT)
-                
-                timestamp = message_data.get('timestamp', '')[:19]
-                time_label = tk.Label(sender_frame, 
-                                    text=timestamp, 
-                                    font=('Arial', 8),
-                                    bg='white',
-                                    fg='#666666')
-                time_label.pack(side=tk.RIGHT)
-                
-                # Texto adicional se existir
-                texto_adicional = message_data.get('texto_adicional', '')
-                if texto_adicional:
-                    text_frame = tk.Frame(content_frame, bg='white')
-                    text_frame.pack(fill=tk.X, pady=(0, 20))
-                    
-                    text_label = tk.Label(text_frame, 
-                                        text=texto_adicional, 
-                                        wraplength=550, 
-                                        justify="left",
-                                        font=('Arial', 11),
-                                        bg='white',
-                                        fg='#333333')
-                    text_label.pack(anchor='w')
-                
-                # Frame da imagem
-                image_frame = tk.Frame(content_frame, bg='#f8f9fa', relief=tk.SUNKEN, bd=1)
-                image_frame.pack(fill=tk.BOTH, pady=(0, 15))
-                
-                # Decodifica e exibe imagem com melhor resolução
-                image_data = base64.b64decode(message_data['content'])
-                image = Image.open(io.BytesIO(image_data))
-                
-                # Redimensiona mantendo qualidade - tamanho maior
-                max_size = (550, 450)  # Tamanho maior para melhor visualização
-                image.thumbnail(max_size, Image.Resampling.LANCZOS)
-                photo = ImageTk.PhotoImage(image)
-                
-                img_label = tk.Label(image_frame, image=photo, bg='#f8f9fa')
-                img_label.image = photo
-                img_label.pack(pady=20, padx=20)
-                
-                # Rodapé com informações do arquivo
-                footer_frame = tk.Frame(content_frame, bg='white')
-                footer_frame.pack(fill=tk.X, pady=(10, 0))
-                
-                filename_label = tk.Label(footer_frame, 
-                                        text=f"📎 {message_data.get('filename', 'imagem')}",
-                                        font=('Arial', 9),
-                                        bg='white',
-                                        fg='#666666')
-                filename_label.pack(anchor='w')
-                
-            except Exception as e:
-                error_frame = tk.Frame(scrollable_frame, bg='white')
-                error_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
-                
-                error_label = tk.Label(error_frame, 
-                                     text=f"Erro ao carregar imagem: {e}", 
-                                     fg='red', 
-                                     wraplength=380,
-                                     font=('Arial', 10),
-                                     bg='white')
-                error_label.pack(expand=True)
-        else:
-            # Mensagem de texto normal
-            root.geometry("550x500")
-            
-            content_frame = tk.Frame(scrollable_frame, bg='white')
-            content_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
-            
-            # Informações do remetente
-            sender_frame = tk.Frame(content_frame, bg='white')
-            sender_frame.pack(fill=tk.X, pady=(0, 15))
-            
-            sender_label = tk.Label(sender_frame, 
-                                  text=f"De: {message_data.get('sender', 'Unknown')}",
-                                  font=('Arial', 10, 'bold'),
-                                  bg='white',
-                                  fg='#333333')
-            sender_label.pack(side=tk.LEFT)
-            
-            timestamp = message_data.get('timestamp', '')[:19]
-            time_label = tk.Label(sender_frame, 
-                                text=timestamp, 
-                                font=('Arial', 8),
-                                bg='white',
-                                fg='#666666')
-            time_label.pack(side=tk.RIGHT)
-            
-            # Mensagem
-            message_frame = tk.Frame(content_frame, bg='#f8f9fa', relief=tk.SUNKEN, bd=1)
-            message_frame.pack(fill=tk.BOTH, expand=True)
-            
-            # Frame interno para a mensagem com scroll se necessário
-            message_inner_frame = tk.Frame(message_frame, bg='#f8f9fa')
-            message_inner_frame.pack(fill=tk.BOTH, expand=True, padx=15, pady=15)
-            
-            message_label = tk.Label(message_inner_frame, 
-                                   text=mensagem, 
-                                   wraplength=480, 
-                                   justify="left", 
-                                   font=('Arial', 11),
-                                   bg='#f8f9fa',
-                                   fg='#333333')
-            message_label.pack(anchor='nw')  # Alinha ao topo esquerdo
-
-        # Botão de fechar (fixo - sem scroll)
-        button_frame = tk.Frame(main_frame, bg='white')
-        button_frame.pack(fill=tk.X, pady=(5, 5))
-        
-        btn = tk.Button(button_frame, 
-                       text="Fechar", 
-                       command=root.destroy, 
-                       font=('Arial', 10, 'bold'),
-                       bg='#008E55',
-                       fg='white',
-                       padx=30,
-                       pady=8,
-                       relief=tk.FLAT,
-                       cursor='hand2')
-        btn.pack(pady=5)
-
-        # Ajustar o scroll para o topo
-        canvas.update_idletasks()
-        canvas.yview_moveto(0.0)
-
-        # Focar na janela
-        root.focus_force()
-        root.lift()
-
-        root.mainloop()
-
-    Thread(target=_popup, daemon=True).start()
-
 def show_connection_status(connected):
-    """Mostra status da conexão na bandeja do sistema (para versão futura)"""
+    """Mostra status da conexão na bandeja do sistema"""
     if toaster:
         status = "conectado" if connected else "desconectado"
         Thread(target=lambda: toaster.show_toast(
@@ -526,24 +529,18 @@ async def listen():
     
     if not usuario_cadastrado:
         print("📝 Usuário não cadastrado. Iniciando processo de cadastro...")
-        
-        # Mostrar formulário de cadastro
         cadastro_sucesso = show_registration_form(system_info)
         
         if cadastro_sucesso:
             print("✅ Cadastro realizado com sucesso! Conectando ao servidor...")
-            # Pequena pausa para processar o cadastro
             await asyncio.sleep(2)
         else:
             print("❌ Cadastro não realizado. Tentando conectar como usuário não cadastrado...")
-            # Continua mesmo sem cadastro, mas como "NÃO CADASTRADO"
     else:
         print("✅ Usuário já cadastrado. Conectando ao servidor...")
     
     # Conexão normal com o servidor WebSocket
-    # Usa o unique_id como username para o servidor
     username_para_conexao = unique_id
-    
     uri = f"ws://{IP_SERVIDOR}:{PORTA}"
     reconnect_count = 0
     max_reconnect_delay = 30
@@ -551,7 +548,6 @@ async def listen():
     while True:
         try:
             async with websockets.connect(uri) as websocket:
-                # Envia o unique_id como username para o servidor
                 await websocket.send(username_para_conexao)
                 
                 print(f"✅ Conectado ao servidor com sucesso!")
@@ -568,7 +564,7 @@ async def listen():
                         
                         print(f"📨 Mensagem recebida de {sender}: {msg_type.upper()}")
 
-                        # Notificação na Central de Ações (win10toast)
+                        # Notificação na Central de Ações
                         if toaster:
                             if msg_type == 'text':
                                 notification_msg = data['content']
@@ -592,13 +588,11 @@ async def listen():
                         if msg_type == 'text':
                             show_popup("Mensagem - Unimed", 
                                      data['content'], 
-                                     icon_path="icon.ico",
                                      message_data=data)
                         else:
                             texto_popup = data.get('texto_adicional', 'Nova imagem recebida')
                             show_popup("Imagem - Unimed", 
                                      texto_popup,
-                                     icon_path="icon.ico",
                                      message_data=data)
 
                     except json.JSONDecodeError:

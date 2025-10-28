@@ -8,6 +8,7 @@ CLIENT
 cd C:\xampp\htdocs\mensagemInterna
 python client.py
 
+__________________________________________________
 GERAR EXECUTAVEL DO CLIENT PYTHON
 INSTALAR -----> pip install pyinstaller
 
